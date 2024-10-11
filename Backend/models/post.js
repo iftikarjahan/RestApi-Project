@@ -21,5 +21,5 @@ const postSchema=new Schema({
 },{timestamps:true})
 
 // Now we need to export the model based out of that schema
-MediaSourceHandle.exports=mongoose.model("Post",postSchema);
+module.exports=mongoose.model("Post",postSchema);
 
