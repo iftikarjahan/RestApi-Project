@@ -7,28 +7,26 @@ exports.getPosts = (req, res, next) => {
     page as the response. We would only send the status code and the data
     ->Based on the status code, data would be rendered 
     */
-  res.status(200).json({
-    posts: [
-      {
-        _id: "1",
-        title: "Post 1",
-        content: "YOOOOO!!! This is the first post",
-        imageUrl:
-          "https://plus.unsplash.com/premium_photo-1683134240084-ba074973f75e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8Y2FyfGVufDB8fDB8fHww",
-        creator: {
-          name: "Iftikar Jahan",
-        },
-        createdAt: new Date(),
-      },
-    ],
-  });
+  Post.find()
+    .then(posts=>{
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json({message:"Fetched posts successfully. Yayyy",posts:posts})
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500; //status code of 500 indicates a server side error
+      }
+      next(err);
+    });
 };
 
 exports.createPost = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const error=new Error("Vlaidation Faileddddd!!!!!! This is not good🥲🥲🥲");
-    error.statusCode=422;
+    const error = new Error(
+      "Vlaidation Faileddddd!!!!!! This is not good🥲🥲🥲"
+    );
+    error.statusCode = 422;
     throw error; //this line takes you to the error handling middleware
   }
 
@@ -39,7 +37,8 @@ exports.createPost = (req, res, next) => {
   const post = new Post({
     title: title,
     content: content,
-    imageUrl:"https://plus.unsplash.com/premium_photo-1672116453187-3aa64afe04ad?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8aW1hZ2V8ZW58MHx8MHx8fDA%3D",
+    imageUrl:
+      "images/1st.jpeg",
     creator: {
       name: "Jahan Babuu",
     },
@@ -52,14 +51,36 @@ exports.createPost = (req, res, next) => {
       // send the response
       res.status(201).json({
         // 201 status code means that a resource was successfully created
-        message: "HAAA HAAAA!!!!  Post created successfully from the node-express backend",
-        post: result
+        message:
+          "HAAA HAAAA!!!!  Post created successfully from the node-express backend",
+        post: result,
       });
     })
     .catch((err) => {
-      if(!err.statusCode){
-        err.statusCode=500;  //status code of 500 indicates a server side error
-      }      
+      if (!err.statusCode) {
+        err.statusCode = 500; //status code of 500 indicates a server side error
+      }
+      next(err);
+    });
+};
+
+exports.getPost = (req, res, next) => {
+  
+  const postId = req.params.postId;
+  Post.findById(postId)
+    .then((post) => {
+      if (!post) {
+        const error = new Error("Could not find the post🤔🤔🤔");
+        error.statusCode = 404; //resource not found
+        throw error; //this would take the error to the next catch block
+      }
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json({ message: "Post fetched", post: post });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500; //status code of 500 indicates a server side error
+      }
       next(err);
     });
 };
