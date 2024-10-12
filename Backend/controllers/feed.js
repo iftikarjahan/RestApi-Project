@@ -30,15 +30,21 @@ exports.createPost = (req, res, next) => {
     throw error; //this line takes you to the error handling middleware
   }
 
+  if(!req.file){
+    const error=new Error("No image has been provided🍃🍃");
+    error.statusCode=422;    //validation error
+    throw error;
+  }
+
   const title = req.body.title;
+  const imageUrl = req.file.path.replace("\\" ,"/");   //.replace is used for cross platform compatibility
   const content = req.body.content;
 
   // create a post in the db
   const post = new Post({
     title: title,
     content: content,
-    imageUrl:
-      "images/1st.jpeg",
+    imageUrl:imageUrl,
     creator: {
       name: "Jahan Babuu",
     },
