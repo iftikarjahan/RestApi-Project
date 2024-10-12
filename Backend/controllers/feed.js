@@ -145,6 +145,29 @@ exports.updatePost=(req,res,next)=>{
 
 }
 
+exports.deletePost=(req,res,next)=>{
+  const postId=req.params.postId;
+  Post.findById(postId).then(post=>{
+    if(!post){
+      const error=new Error("Post not Found👩‍🦰👩‍🦰👩‍🦰");
+      error.statusCode=404;
+      throw error;
+    }
+    // Check if the user is logged in
+    clearImage(post.imageUrl);
+    return Post.findByIdAndDelete(postId);
+  }).then(result=>{
+    console.log(result);
+    res.status(200).json({message:"Post deleted successfully"});
+  }).catch(err=>{
+    if(!err.statusCode){
+      err.statusCode=500;
+    }
+    next(err);
+  })
+}
+
+
 const clearImage=filePath=>{
   filePath=path.join(__dirname,"..",filePath);
   fs.unlink(filePath,err=>console.log(err));
