@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
+const authRoutes=require("./routes/auth");
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -49,7 +50,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/feed", feedRoutes);
+app.use("/feed",feedRoutes);
+app.use("/auth",authRoutes);
 
 // error handling middleware
 app.use((error, req, res, next) => {
