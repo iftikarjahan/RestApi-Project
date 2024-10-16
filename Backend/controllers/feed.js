@@ -3,6 +3,7 @@ const Post = require("../models/post");
 const post = require("../models/post");
 const fs = require("fs");
 const path = require("path");
+const User=require("../models/user"); 
 
 exports.getPosts = (req, res, next) => {
   /*
@@ -60,21 +61,27 @@ exports.createPost = (req, res, next) => {
     title: title,
     content: content,
     imageUrl: imageUrl,
-    creator: {
-      name: "Jahan Babuu",
-    },
+    creator:req.userId
   });
+  let creator;
 
   post
     .save()
     .then((result) => {
-      console.log(result);
+      // Once I save the post, I also want to modify the corresponding user document
+      return User.findById(req.userId);
+    }).then(user=>{
+      creator=user;
+      user.posts.push(post);  //here mongoose will do all the heavy lifting of pulling out the postid and add that to the user.posts field
+      return user.save();   //modify the user document also
+    }).then(result=>{
       // send the response
       res.status(201).json({
         // 201 status code means that a resource was successfully created
         message:
           "HAAA HAAAA!!!!  Post created successfully from the node-express backend",
-        post: result,
+        post: post,
+        creator:{_id:creator._id,name:creator.name}
       });
     })
     .catch((err) => {
@@ -138,6 +145,12 @@ exports.updatePost = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
+      // adding authorization checks
+      if(post.creator.toString()!==req.userId){
+        const error=new Error("Not authorised to update");
+        error.statusCode=403;
+        throw error;
+      }
       if (imageUrl !== post.imageUrl) {
         // this means that a new image has been added
         clearImage(post.imageUrl);
@@ -167,12 +180,27 @@ exports.deletePost = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
+      // adding authorization checks
+      if(post.creator.toString()!==req.userId){
+        const error=new Error("Not authorised to DELETEEE");
+        error.statusCode=403;
+        throw error;
+      }
+
+
       // Check if the user is logged in
       clearImage(post.imageUrl);
       return Post.findByIdAndDelete(postId);
     })
     .then((result) => {
-      console.log(result);
+      // console.log(result);
+      return User.findById(req.userId);
+    })
+    .then(user=>{
+      user.posts.pull(postId);
+      return user.save();
+    })
+    .then(result=>{
       res.status(200).json({ message: "Post deleted successfully" });
     })
     .catch((err) => {
